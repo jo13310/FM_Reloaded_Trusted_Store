@@ -12,14 +12,14 @@ This repository contains the `mods.json` index file that powers the mod store br
 
 ### Browsing the Store
 
-1. Open FM Reloaded Mod Manager
-2. Go to the **Mod Store** tab
-3. Browse available mods or use the search function
-4. Click "Install Selected" to download and install
+1. Open FM Reloaded Mod Manager  
+2. Go to the **Mod Store** tab  
+3. Browse available mods or use the search function  
+4. Click **Install Selected** to download and install
 
 ### Automatic Updates
 
-The mod manager automatically checks for updates when you refresh your mod list. Mods with updates available show a "⬆" icon.
+The mod manager automatically checks for updates when you refresh your mod list. Mods with updates available are highlighted in the list.
 
 ## For Mod Authors
 
@@ -28,18 +28,19 @@ The mod manager automatically checks for updates when you refresh your mod list.
 See the main repository's [STORE_SUBMISSION.md](https://github.com/jo13310/FM_Reloaded/blob/main/STORE_SUBMISSION.md) for detailed submission instructions.
 
 **Quick submission**:
-1. Open FM Reloaded Mod Manager
-2. Click "Submit Mod" button (bottom right)
+
+1. Open FM Reloaded Mod Manager  
+2. Click the **Submit Mod** button (bottom right)  
 3. Fill in the form and submit
 
 Your mod will be reviewed and added within 3-7 days.
 
 ### Requirements
 
-- Public GitHub repository
-- Valid `manifest.json` following FM Reloaded format
-- At least one tagged release with `.zip` file
-- Clear README with installation instructions
+- Public GitHub repository  
+- Valid `manifest.json` following FM Reloaded format  
+- At least one tagged release with a `.zip` asset  
+- Clear README with installation instructions  
 - Appropriate open-source license
 
 ## Store Format
@@ -48,9 +49,9 @@ Your mod will be reviewed and added within 3-7 days.
 
 ```json
 {
-  "version": "1.0.0",
-  "last_updated": "2025-01-15T12:00:00Z",
-  "mod_count": 42,
+  "version": "1.1.0",
+  "last_updated": "2025-11-02T19:56:24Z",
+  "mod_count": 1,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
     "maintainer": "Your Name",
@@ -59,17 +60,23 @@ Your mod will be reviewed and added within 3-7 days.
   },
   "mods": [
     {
-      "name": "Mod Name",
+      "name": "ArthurRay PoV Camera Mod",
       "version": "1.0.0",
-      "type": "ui|graphics|tactics|database|misc",
-      "author": "Author Name",
-      "description": "Brief description",
-      "homepage": "https://github.com/author/mod",
-      "download_url": "https://github.com/author/mod/releases/download/v1.0.0/mod.zip",
-      "changelog_url": "https://github.com/author/mod/blob/main/CHANGELOG.md",
+      "type": "misc",
+      "author": "GerKo & Brululul",
+      "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
+      "homepage": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod",
+      "download": {
+        "type": "github_release",
+        "repo": "jo13310/Arthur-s---PoV-Camera-Mod",
+        "asset": "ArthurRayPovMod.dll",
+        "tag_prefix": "v"
+      },
+      "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.0.0",
+      "manifest_url": "https://raw.githubusercontent.com/jo13310/Arthur-s---PoV-Camera-Mod/main/manifest.json",
       "downloads": 0,
-      "date_added": "2025-01-15",
-      "last_updated": "2025-01-15",
+      "date_added": "2025-02-11",
+      "last_updated": "2025-02-11",
       "dependencies": [],
       "conflicts": [],
       "compatibility": {
@@ -91,7 +98,17 @@ Your mod will be reviewed and added within 3-7 days.
 | `author` | string | Mod creator |
 | `description` | string | 1-2 sentence summary (max 200 chars) |
 | `homepage` | string | GitHub repository URL |
-| `download_url` | string | Direct link to .zip release |
+| `download` | object | Download configuration (see below) |
+
+#### `download` object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Currently only `github_release` is supported |
+| `repo` | string | GitHub repository in `owner/name` form |
+| `asset` | string | Name of the release asset the manager should download |
+| `tag_prefix` | string (optional) | Prefix applied to version numbers when matching release tags (default `v`) |
+| `tag` | string (optional) | Explicit tag to use instead of `tag_prefix + version` |
 
 ### Optional Fields
 
@@ -104,6 +121,7 @@ Your mod will be reviewed and added within 3-7 days.
 | `dependencies` | array | Required mods |
 | `conflicts` | array | Incompatible mods |
 | `compatibility` | object | Version requirements |
+| `manifest_url` | string | Raw URL to the manifest when the release asset is not a ZIP |
 
 ## Validation
 
@@ -113,50 +131,60 @@ Before submitting a PR, validate your changes:
 python validate_mods.py
 ```
 
+Add `--verify-downloads` to also verify the referenced GitHub releases and ensure the store version matches the latest tag:
+
+```bash
+python validate_mods.py --verify-downloads
+```
+
 This checks:
 - JSON syntax
 - Required fields
 - URL validity
 - Version format
+- Download configuration
 - Duplicate detection
+- (Optional) Remote release metadata
+
+> Tip: Set a `GITHUB_TOKEN` environment variable to avoid API rate limits when using `--verify-downloads`.
 
 ## Maintenance
 
 ### Adding a Mod
 
-1. Fork this repository
-2. Add your mod entry to `mods.json` in the `mods` array
-3. Increment `mod_count`
-4. Update `last_updated` timestamp
-5. Run `python validate_mods.py`
+1. Fork this repository  
+2. Add your mod entry to `mods.json` in the `mods` array  
+3. Increment `mod_count`  
+4. Update `last_updated` timestamp  
+5. Run `python validate_mods.py --verify-downloads`  
 6. Submit a pull request
 
 ### Updating a Mod
 
-1. Find your mod entry in `mods.json`
-2. Update the `version` field
-3. Update the `download_url` to the new release
-4. Update `last_updated` timestamp
-5. Optionally update `description` or other fields
+1. Find your mod entry in `mods.json`  
+2. Update the `version` field  
+3. Adjust the `download` block (update `asset`, `tag_prefix`, or `tag` if needed)  
+4. Update `last_updated` timestamp  
+5. Optionally update `description` or other fields  
 6. Submit a PR
 
 ### Removing a Mod
 
 Mods are rarely removed, but may be if:
-- Author requests removal
-- License violation discovered
+- Author requests removal  
+- License violation discovered  
 - Mod becomes incompatible and unmaintained
 
 ## Statistics
 
-- **Total Mods**: 2 (example entries)
-- **Last Updated**: 2025-01-15
-- **Store Version**: 1.0.0
+- **Total Mods**: 1 (ArthurRay PoV Camera Mod)  
+- **Last Updated**: 2025-11-02  
+- **Store Version**: 1.1.0
 
 ## Support
 
-- **Submissions**: Use the "Submit Mod" button in FM Reloaded
-- **Issues**: [GitHub Issues](https://github.com/jo13310/FM_Reloaded_Trusted_Store/issues)
+- **Submissions**: Use the "Submit Mod" button in FM Reloaded  
+- **Issues**: [GitHub Issues](https://github.com/jo13310/FM_Reloaded_Trusted_Store/issues)  
 - **Discord**: [Join our server](#)
 
 ## License

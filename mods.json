@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "last_updated": "2025-01-15T12:00:00Z",
-  "mod_count": 2,
+  "version": "1.1.0",
+  "last_updated": "2025-11-02T19:56:24Z",
+  "mod_count": 1,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
     "maintainer": "GerKo",
@@ -10,38 +10,25 @@
   },
   "mods": [
     {
-      "name": "Example UI Enhancement",
+      "name": "ArthurRay PoV Camera Mod",
       "version": "1.0.0",
-      "type": "ui",
-      "author": "ExampleAuthor",
-      "description": "A sample UI mod showing the proper format for store submissions",
-      "homepage": "https://github.com/exampleauthor/example-ui-mod",
-      "download_url": "https://github.com/exampleauthor/example-ui-mod/releases/download/v1.0.0/example-ui-mod.zip",
-      "changelog_url": "https://github.com/exampleauthor/example-ui-mod/blob/main/CHANGELOG.md",
+      "type": "misc",
+      "author": "GerKo & Brululul",
+      "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
+      "homepage": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod",
+      "download": {
+        "type": "github_release",
+        "repo": "jo13310/Arthur-s---PoV-Camera-Mod",
+        "asset": "ArthurRayPovMod.dll",
+        "tag_prefix": "v"
+      },
+      "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.0.0",
+      "manifest_url": "https://raw.githubusercontent.com/jo13310/Arthur-s---PoV-Camera-Mod/main/manifest.json",
       "downloads": 0,
-      "date_added": "2025-01-15",
-      "last_updated": "2025-01-15",
+      "date_added": "2025-02-11",
+      "last_updated": "2025-02-11",
       "dependencies": [],
       "conflicts": [],
-      "compatibility": {
-        "fm_version": "26.0.0",
-        "min_loader_version": "0.5.0"
-      }
-    },
-    {
-      "name": "Example Graphics Pack",
-      "version": "2.0.1",
-      "type": "graphics",
-      "author": "GraphicsTeam",
-      "description": "Sample graphics pack showing kit, logo, and face pack format",
-      "homepage": "https://github.com/graphicsteam/example-graphics",
-      "download_url": "https://github.com/graphicsteam/example-graphics/releases/download/v2.0.1/example-graphics.zip",
-      "changelog_url": "https://github.com/graphicsteam/example-graphics/releases/tag/v2.0.1",
-      "downloads": 0,
-      "date_added": "2025-01-10",
-      "last_updated": "2025-01-15",
-      "dependencies": [],
-      "conflicts": ["OtherGraphicsPack"],
       "compatibility": {
         "fm_version": "26.0.0",
         "min_loader_version": "0.5.0"
