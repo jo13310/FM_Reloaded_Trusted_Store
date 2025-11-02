@@ -1,0 +1,19 @@
+{
+  "name": "TorojoH Camera Mod",
+  "version": "0.1.0",
+  "type": "misc",
+  "author": "TorojoH",
+  "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
+  "description": "Imports the ArthurRay first-person camera build maintained by TorojoH.",
+  "compatibility": {
+    "fm_version": "26.0.0",
+    "min_loader_version": "0.5.0"
+  },
+  "files": [
+    {
+      "source": "plugins/ArthurRayPovMod.dll",
+      "target_subpath": "BepInEx/plugins/ArthurRayPovMod.dll",
+      "platform": "windows"
+    }
+  ]
+}

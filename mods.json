@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0",
-  "last_updated": "2025-11-02T20:34:51Z",
-  "mod_count": 1,
+  "version": "1.2.0",
+  "last_updated": "2025-11-02T23:41:00Z",
+  "mod_count": 2,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
     "maintainer": "GerKo",
@@ -28,6 +28,26 @@
       "downloads": 0,
       "date_added": "2025-02-11",
       "last_updated": "2025-02-11",
+      "dependencies": [],
+      "conflicts": [],
+      "compatibility": {
+        "fm_version": "26.0.0",
+        "min_loader_version": "0.5.0"
+      }
+    },
+    {
+      "name": "TorojoH Camera Mod",
+      "version": "0.1.0",
+      "type": "misc",
+      "author": "TorojoH",
+      "description": "ArthurRay first-person camera variant maintained by TorojoH.",
+      "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
+      "download_url": "https://raw.githubusercontent.com/torojoh/FM26-Camera-Mod/main/Release/ArthurRayPovMod.dll",
+      "manifest_url": "https://raw.githubusercontent.com/jo13310/FM_Reloaded_Trusted_Store/main/manifests/torojoh_camera.json",
+      "install_notes": "Uses trusted manifest to place ArthurRayPovMod.dll into BepInEx/plugins/.",
+      "downloads": 0,
+      "date_added": "2025-11-02",
+      "last_updated": "2025-11-02",
       "dependencies": [],
       "conflicts": [],
       "compatibility": {
