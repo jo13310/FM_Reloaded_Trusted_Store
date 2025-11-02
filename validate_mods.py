@@ -84,17 +84,24 @@ def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str],
                 "for github_release downloads"
             )
 
-        tag_override = download.get("tag")
-        if tag_override and not isinstance(tag_override, str):
+        latest_flag = download.get("latest")
+        if latest_flag not in (None, False, True):
             errors.append(
-                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag must be a string"
+                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.latest must be boolean when provided"
             )
 
-        tag_prefix = download.get("tag_prefix", DEFAULT_TAG_PREFIX)
-        if not isinstance(tag_prefix, str):
-            errors.append(
-                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag_prefix must be a string"
-            )
+        if not latest_flag:
+            tag_override = download.get("tag")
+            if tag_override and not isinstance(tag_override, str):
+                errors.append(
+                    f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag must be a string"
+                )
+
+            tag_prefix = download.get("tag_prefix", DEFAULT_TAG_PREFIX)
+            if not isinstance(tag_prefix, str):
+                errors.append(
+                    f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag_prefix must be a string"
+                )
 
     return errors, warnings
 
@@ -159,6 +166,11 @@ def validate_mod_entry(mod: Dict[str, Any], index: int) -> Tuple[List[str], List
     if "conflicts" in mod and not isinstance(mod["conflicts"], list):
         errors.append(
             f"Mod #{index} ({mod_name}): 'conflicts' must be an array"
+        )
+
+    if "install_notes" in mod and not isinstance(mod["install_notes"], str):
+        errors.append(
+            f"Mod #{index} ({mod_name}): 'install_notes' must be a string"
         )
 
     download_errors, download_warnings = validate_download_block(mod, index)
@@ -270,16 +282,29 @@ def verify_github_release(
     asset_name = download["asset"]
     tag_prefix = download.get("tag_prefix", DEFAULT_TAG_PREFIX)
     store_version = mod["version"]
+    use_latest = bool(download.get("latest"))
     tag_name = download.get("tag") or f"{tag_prefix}{store_version}"
 
-    release_url = f"https://api.github.com/repos/{repo}/releases/tags/{tag_name}"
-    release, error = github_api_get(release_url, token)
-    if error:
-        errors.append(
-            f"Mod #{index} ({mod['name']}): unable to fetch release '{tag_name}' for {repo} "
-            f"({error})"
-        )
-        return errors, warnings
+    if use_latest:
+        release_url = f"https://api.github.com/repos/{repo}/releases/latest"
+        release, error = github_api_get(release_url, token)
+        if error:
+            errors.append(
+                f"Mod #{index} ({mod['name']}): unable to fetch latest release for {repo} "
+                f"({error})"
+            )
+            return errors, warnings
+        # For messaging/version comparison
+        tag_name = release.get("tag_name", tag_name)
+    else:
+        release_url = f"https://api.github.com/repos/{repo}/releases/tags/{tag_name}"
+        release, error = github_api_get(release_url, token)
+        if error:
+            errors.append(
+                f"Mod #{index} ({mod['name']}): unable to fetch release '{tag_name}' for {repo} "
+                f"({error})"
+            )
+            return errors, warnings
 
     assets = release.get("assets", [])
     asset_names = {asset.get("name") for asset in assets}
@@ -294,14 +319,18 @@ def verify_github_release(
                 f"Mod #{index} ({mod['name']}): asset '{asset_name}' is missing download URL"
             )
 
-    latest_url = f"https://api.github.com/repos/{repo}/releases/latest"
-    latest_release, latest_error = github_api_get(latest_url, token)
-    if latest_error:
-        warnings.append(
-            f"Mod #{index} ({mod['name']}): unable to determine latest release "
-            f"({latest_error})"
-        )
-        return errors, warnings
+    if use_latest:
+        latest_release = release
+        latest_error = None
+    else:
+        latest_url = f"https://api.github.com/repos/{repo}/releases/latest"
+        latest_release, latest_error = github_api_get(latest_url, token)
+        if latest_error:
+            warnings.append(
+                f"Mod #{index} ({mod['name']}): unable to determine latest release "
+                f"({latest_error})"
+            )
+            return errors, warnings
 
     latest_tag = latest_release.get("tag_name", "")
     latest_version = normalise_tag(latest_tag, tag_prefix)

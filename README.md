@@ -39,7 +39,7 @@ Your mod will be reviewed and added within 3-7 days.
 
 - Public GitHub repository  
 - Valid `manifest.json` following FM Reloaded format  
-- At least one tagged release with a `.zip` asset  
+- At least one tagged release with an installable asset (ZIP preferred; single files must provide a manifest URL)  
 - Clear README with installation instructions  
 - Appropriate open-source license
 
@@ -70,7 +70,7 @@ Your mod will be reviewed and added within 3-7 days.
         "type": "github_release",
         "repo": "jo13310/Arthur-s---PoV-Camera-Mod",
         "asset": "ArthurRayPovMod.dll",
-        "tag_prefix": "v"
+        "latest": true
       },
       "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.0.0",
       "manifest_url": "https://raw.githubusercontent.com/jo13310/Arthur-s---PoV-Camera-Mod/main/manifest.json",
@@ -109,6 +109,12 @@ Your mod will be reviewed and added within 3-7 days.
 | `asset` | string | Name of the release asset the manager should download |
 | `tag_prefix` | string (optional) | Prefix applied to version numbers when matching release tags (default `v`) |
 | `tag` | string (optional) | Explicit tag to use instead of `tag_prefix + version` |
+| `latest` | boolean (optional) | Use GitHub's `releases/latest` channel instead of a fixed tag |
+
+> **Packaging rules**
+>
+> - `.zip` assets must contain `manifest.json` at the root plus the files/folders referenced in the manifest `files` array.  
+> - Single-file releases (DLLs, FMFs, etc.) require `manifest_url` to point at the raw manifest in your repository. The Mod Manager stages the download into the manifest's `source` path (for example `plugins/YourMod.dll`) and copies it to the `target_subpath` (`BepInEx/plugins/YourMod.dll` in the Arthur example).
 
 ### Optional Fields
 
@@ -122,6 +128,7 @@ Your mod will be reviewed and added within 3-7 days.
 | `conflicts` | array | Incompatible mods |
 | `compatibility` | object | Version requirements |
 | `manifest_url` | string | Raw URL to the manifest when the release asset is not a ZIP |
+| `install_notes` | string | Optional short description of where the mod files are placed |
 
 ## Validation
 

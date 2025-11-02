@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "last_updated": "2025-11-02T19:56:24Z",
+  "last_updated": "2025-11-02T20:34:51Z",
   "mod_count": 1,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
@@ -20,10 +20,11 @@
         "type": "github_release",
         "repo": "jo13310/Arthur-s---PoV-Camera-Mod",
         "asset": "ArthurRayPovMod.dll",
-        "tag_prefix": "v"
+        "latest": true
       },
       "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.0.0",
       "manifest_url": "https://raw.githubusercontent.com/jo13310/Arthur-s---PoV-Camera-Mod/main/manifest.json",
+      "install_notes": "Installs ArthurRayPovMod.dll into BepInEx/plugins/ via manifest mapping.",
       "downloads": 0,
       "date_added": "2025-02-11",
       "last_updated": "2025-02-11",
