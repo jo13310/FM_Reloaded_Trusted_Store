@@ -11,8 +11,8 @@
   "mods": [
     {
       "name": "ArthurRay PoV Camera Mod",
-      "version": "1.0.0",
-      "type": "Camera",
+      "version": "1.1.0",
+      "type": "misc",
       "author": "GerKo & Brululul",
       "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
       "homepage": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod",
