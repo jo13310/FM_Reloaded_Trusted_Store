@@ -1,7 +1,7 @@
 {
   "name": "Brululul Faster Match Startup",
   "version": "1.0.0",
-  "type": "misc",
+  "type": "QoL",
   "author": "Brululul",
   "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
   "description": "Speeds up pre-match startup sequences by skipping non-essential delays.",

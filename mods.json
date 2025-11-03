@@ -1,7 +1,7 @@
 {
-  "version": "1.3.0",
-  "last_updated": "2025-11-03T19:30:00Z",
-  "mod_count": 4,
+  "version": "1.3.1",
+  "last_updated": "2025-11-03T23:10:00Z",
+  "mod_count": 6,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
     "maintainer": "GerKo",
@@ -12,7 +12,7 @@
     {
       "name": "ArthurRay PoV Camera Mod",
       "version": "1.0.0",
-      "type": "misc",
+      "type": "Camera",
       "author": "GerKo & Brululul",
       "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
       "homepage": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod",
@@ -64,7 +64,7 @@
     {
       "name": "Brululul Manager Free Camera",
       "version": "1.0.0",
-      "type": "misc",
+      "type": "Camera",
       "author": "Brululul",
       "description": "Provides a fully controllable manager camera with smooth panning controls.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
@@ -92,7 +92,7 @@
     {
       "name": "Brululul Faster Match Startup",
       "version": "1.0.0",
-      "type": "misc",
+      "type": "QoL",
       "author": "Brululul",
       "description": "Skips non-essential cinematics to reduce time from tunnel to kickoff.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
@@ -104,6 +104,46 @@
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/FM_Reloaded_Trusted_Store/main/manifests/brul_faster_match_startup.json",
       "install_notes": "Places brululul.fastermatchstartup.dll into BepInEx/plugins/ via manifest mapping.",
+      "downloads": 0,
+      "date_added": "2025-11-03",
+      "last_updated": "2025-11-03",
+      "dependencies": [],
+      "conflicts": [],
+      "compatibility": {
+        "fm_version": "26.0.0",
+        "min_loader_version": "0.5.0"
+      }
+    },
+    {
+      "name": "NameFix FM26 Open Names Pack",
+      "version": "1.1.0",
+      "type": "Database",
+      "author": "Community Maintainers",
+      "description": "Consolidated real-name corrections for competitions, clubs, people, stadiums, and awards in a single clean LNC file.",
+      "homepage": "https://github.com/jo13310/NameFixFM26",
+      "download_url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/assets/lnc/FM26-open-names.lnc",
+      "manifest_url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/manifest.json",
+      "install_notes": "Stages FM26-open-names.lnc into shared/data/database/db/2600/lnc/all/ and removes conflicting stock licensing files via manifest cleanup directives.",
+      "downloads": 0,
+      "date_added": "2025-11-03",
+      "last_updated": "2025-11-03",
+      "dependencies": [],
+      "conflicts": [],
+      "compatibility": {
+        "fm_version": "26.0.0",
+        "min_loader_version": "0.5.0"
+      }
+    },
+    {
+      "name": "GameSpeed Match Speed Mod",
+      "version": "1.0.0",
+      "type": "misc",
+      "author": "GameSpeed",
+      "description": "Adds extended match speed options up to x80 for Football Manager 2026.",
+      "homepage": "https://github.com/jo13310/GameSpeed-FM26",
+      "download_url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/gamemodules_assets_match.bundle",
+      "manifest_url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/manifest.json",
+      "install_notes": "Copies gamemodules_assets_match.bundle into aa/StandaloneWindows64/.",
       "downloads": 0,
       "date_added": "2025-11-03",
       "last_updated": "2025-11-03",

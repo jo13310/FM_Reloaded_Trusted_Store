@@ -1,7 +1,7 @@
 {
   "name": "TorojoH Camera Mod",
   "version": "0.1.0",
-  "type": "misc",
+  "type": "Camera",
   "author": "TorojoH",
   "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
   "description": "Imports the ArthurRay first-person camera build maintained by TorojoH.",
