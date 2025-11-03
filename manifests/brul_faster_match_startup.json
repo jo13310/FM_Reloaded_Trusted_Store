@@ -1,0 +1,19 @@
+{
+  "name": "Brululul Faster Match Startup",
+  "version": "1.0.0",
+  "type": "misc",
+  "author": "Brululul",
+  "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
+  "description": "Speeds up pre-match startup sequences by skipping non-essential delays.",
+  "compatibility": {
+    "fm_version": "26.0.0",
+    "min_loader_version": "0.5.0"
+  },
+  "files": [
+    {
+      "source": "brululul.fastermatchstartup.dll",
+      "target_subpath": "BepInEx/plugins/brululul.fastermatchstartup.dll",
+      "platform": "windows"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Brululul Manager Free Camera",
+  "version": "1.0.0",
+  "type": "misc",
+  "author": "Brululul",
+  "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
+  "description": "Adds a freely controllable match camera maintained by Brululul.",
+  "compatibility": {
+    "fm_version": "26.0.0",
+    "min_loader_version": "0.5.0"
+  },
+  "files": [
+    {
+      "source": "brululul.managerfreecamera.dll",
+      "target_subpath": "BepInEx/plugins/brululul.managerfreecamera.dll",
+      "platform": "windows"
+    }
+  ]
+}
