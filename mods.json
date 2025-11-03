@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
-  "last_updated": "2025-11-02T23:41:00Z",
+  "version": "1.2.1",
+  "last_updated": "2025-11-03T19:22:23Z",
   "mod_count": 2,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
@@ -11,7 +11,7 @@
   "mods": [
     {
       "name": "ArthurRay PoV Camera Mod",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "type": "misc",
       "author": "GerKo & Brululul",
       "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
@@ -22,12 +22,12 @@
         "asset": "ArthurRayPovMod.dll",
         "latest": true
       },
-      "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.0.0",
+      "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.1",
       "manifest_url": "https://raw.githubusercontent.com/jo13310/Arthur-s---PoV-Camera-Mod/main/manifest.json",
       "install_notes": "Installs ArthurRayPovMod.dll into BepInEx/plugins/ via manifest mapping.",
       "downloads": 1,
       "date_added": "2025-02-11",
-      "last_updated": "2025-02-11",
+      "last_updated": "2025-11-03",
       "dependencies": [],
       "conflicts": [],
       "compatibility": {
