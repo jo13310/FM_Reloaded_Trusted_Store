@@ -48,8 +48,14 @@ jobs:
           import re
           import sys
           from pathlib import Path
-          from typing import Dict, Optional, Tuple
+          from typing import Dict, List, Optional, Tuple
           import requests
+
+          VERSION_CANDIDATE_RE = re.compile(
+              r"(?<!\d)v?(?P<major>\d+)(?:[._](?P<minor>\d+))(?:[._](?P<patch>\d+))?",
+              re.IGNORECASE,
+          )
+
 
           def get_github_token() -> str:
               """Get GitHub token from environment."""
@@ -58,15 +64,87 @@ jobs:
                   print("⚠️  No GitHub token found, using unauthenticated requests (60/hour limit)")
               return token
 
-          def parse_version(version_str: str) -> Optional[Tuple[int, ...]]:
-              """Parse semantic version string into tuple for comparison."""
-              # Remove 'v' prefix if present
-              version_str = version_str.lstrip('v')
-              # Match semantic versioning: major.minor.patch
-              match = re.match(r'^(\d+)\.(\d+)\.(\d+)', version_str)
-              if match:
-                  return tuple(map(int, match.groups()))
-              return None
+          def parse_version(version_str: str) -> Optional[Tuple[int, int, int]]:
+              """Extract a semantic version tuple from a string."""
+              if not version_str:
+                  return None
+
+              match = VERSION_CANDIDATE_RE.search(version_str)
+              if not match:
+                  return None
+
+              matched_text = match.group(0)
+              if '.' not in matched_text and '_' not in matched_text:
+                  return None
+
+              major = int(match.group('major'))
+              minor = int(match.group('minor'))
+              patch = int(match.group('patch') or 0)
+              return major, minor, patch
+
+
+          def format_version_tuple(version: Tuple[int, int, int]) -> str:
+              """Convert a version tuple to a canonical dotted string."""
+              major, minor, patch = version
+              return f"{major}.{minor}.{patch}"
+
+
+          def find_release_version(
+              metadata: Dict,
+              preferred_asset: Optional[str] = None,
+          ) -> Tuple[Optional[str], Optional[str]]:
+              """Determine the most likely version string from release metadata."""
+
+              candidate_sources: List[Tuple[str, str]] = []
+
+              def add_candidate(value: Optional[str], source: str) -> None:
+                  if value:
+                      candidate_sources.append((value, source))
+
+              add_candidate(metadata.get('tag_name'), 'tag')
+              add_candidate(metadata.get('name'), 'release name')
+
+              assets = metadata.get('assets') or []
+
+              if preferred_asset:
+                  for asset in assets:
+                      if asset.get('name') == preferred_asset:
+                          asset_name = asset.get('name')
+                          if asset_name:
+                              add_candidate(asset_name, f"asset '{asset_name}'")
+
+                          asset_label = asset.get('label')
+                          if asset_label:
+                              add_candidate(asset_label, f"asset label '{asset_label}'")
+                          break
+
+              for asset in assets:
+                  asset_name = asset.get('name')
+                  if asset_name and asset_name != preferred_asset:
+                      add_candidate(asset_name, f"asset '{asset_name}'")
+
+                  asset_label = asset.get('label')
+                  if asset_label:
+                      add_candidate(asset_label, f"asset label '{asset_label}'")
+
+              body = metadata.get('body')
+              if body:
+                  add_candidate(body[:1000], 'release notes')
+
+              seen: set[Tuple[int, int, int]] = set()
+
+              for text, source in candidate_sources:
+                  parsed = parse_version(text)
+                  if not parsed:
+                      continue
+
+                  if parsed in seen:
+                      continue
+
+                  seen.add(parsed)
+                  return format_version_tuple(parsed), source
+
+              return None, None
 
           def compare_versions(v1: str, v2: str) -> int:
               """
@@ -85,7 +163,11 @@ jobs:
                   return -1
               return 0
 
-          def get_latest_github_release(repo: str, token: str) -> Optional[Dict]:
+          def get_latest_github_release(
+              repo: str,
+              token: str,
+              preferred_asset: Optional[str] = None,
+          ) -> Optional[Dict]:
               """
               Query GitHub API for latest release.
               Returns: {'version': 'v1.2.3', 'tag_name': 'v1.2.3', 'published_at': '...'}
@@ -108,12 +190,14 @@ jobs:
 
                   response.raise_for_status()
                   data = response.json()
+                  version, source = find_release_version(data, preferred_asset)
 
                   return {
-                      'version': data['tag_name'],
-                      'tag_name': data['tag_name'],
-                      'published_at': data['published_at'],
-                      'html_url': data['html_url']
+                      'version': version or data.get('tag_name', ''),
+                      'tag_name': data.get('tag_name'),
+                      'published_at': data.get('published_at'),
+                      'html_url': data.get('html_url'),
+                      'version_source': source,
                   }
               except requests.exceptions.RequestException as e:
                   print(f"  ❌ Error fetching {repo}: {e}")
@@ -156,14 +240,29 @@ jobs:
                   print(f"🔍 Checking {mod_name} (current: {current_version})")
 
                   # Query GitHub for latest release
-                  latest_release = get_latest_github_release(repo, token)
+                  preferred_asset = download_info.get('asset')
+                  latest_release = get_latest_github_release(repo, token, preferred_asset)
 
                   if not latest_release:
                       errors.append(mod_name)
                       continue
 
                   latest_version = latest_release['version']
-                  print(f"  Latest on GitHub: {latest_version}")
+                  version_source = latest_release.get('version_source')
+                  raw_tag = latest_release.get('tag_name')
+
+                  if version_source:
+                      print(f"  Latest on GitHub: {latest_version} (from {version_source})")
+                      if raw_tag and raw_tag != latest_version:
+                          print(f"    ↳ Release tag: {raw_tag}")
+                  else:
+                      print(f"  Latest on GitHub: {latest_version or 'unknown'}")
+
+                  latest_version_tuple = parse_version(latest_version)
+                  if not latest_version_tuple:
+                      print("  ⚠️  Unable to determine version number from release metadata")
+                      errors.append(mod_name)
+                      continue
 
                   # Compare versions
                   if compare_versions(latest_version, current_version) > 0:
