@@ -1,6 +1,6 @@
 {
   "version": "1.3.1",
-  "last_updated": "2025-11-03T23:10:00Z",
+  "last_updated": "2025-11-03T23:25:00Z",
   "mod_count": 6,
   "store_info": {
     "name": "FM Reloaded Trusted Store",
@@ -45,7 +45,12 @@
       "author": "TorojoH",
       "description": "ArthurRay first-person camera variant maintained by TorojoH.",
       "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
-      "download_url": "https://raw.githubusercontent.com/torojoh/FM26-Camera-Mod/main/Release/ArthurRayPovMod.dll",
+      "download": {
+        "type": "github_release",
+        "repo": "torojoh/FM26-Camera-Mod",
+        "asset": "ArthurRayPovMod.dll",
+        "latest": true
+      },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/FM_Reloaded_Trusted_Store/main/manifests/torojoh_camera.json",
       "install_notes": "Uses trusted manifest to place ArthurRayPovMod.dll into BepInEx/plugins/.",
       "downloads": 0,
@@ -64,7 +69,7 @@
     {
       "name": "Brululul Manager Free Camera",
       "version": "1.0.0",
-      "type": "Camera",
+      "type": "misc",
       "author": "Brululul",
       "description": "Provides a fully controllable manager camera with smooth panning controls.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
@@ -92,7 +97,7 @@
     {
       "name": "Brululul Faster Match Startup",
       "version": "1.0.0",
-      "type": "QoL",
+      "type": "misc",
       "author": "Brululul",
       "description": "Skips non-essential cinematics to reduce time from tunnel to kickoff.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
@@ -117,11 +122,16 @@
     {
       "name": "NameFix FM26 Open Names Pack",
       "version": "1.1.0",
-      "type": "Database",
+      "type": "database",
       "author": "Community Maintainers",
       "description": "Consolidated real-name corrections for competitions, clubs, people, stadiums, and awards in a single clean LNC file.",
       "homepage": "https://github.com/jo13310/NameFixFM26",
-      "download_url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/assets/lnc/FM26-open-names.lnc",
+      "download": {
+        "type": "github_release",
+        "repo": "jo13310/NameFixFM26",
+        "asset": "FM26-open-names.lnc",
+        "latest": true
+      },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/manifest.json",
       "install_notes": "Stages FM26-open-names.lnc into shared/data/database/db/2600/lnc/all/ and removes conflicting stock licensing files via manifest cleanup directives.",
       "downloads": 0,
@@ -141,7 +151,12 @@
       "author": "GameSpeed",
       "description": "Adds extended match speed options up to x80 for Football Manager 2026.",
       "homepage": "https://github.com/jo13310/GameSpeed-FM26",
-      "download_url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/gamemodules_assets_match.bundle",
+      "download": {
+        "type": "github_release",
+        "repo": "jo13310/GameSpeed-FM26",
+        "asset": "gamemodules_assets_match.bundle",
+        "latest": true
+      },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/manifest.json",
       "install_notes": "Copies gamemodules_assets_match.bundle into aa/StandaloneWindows64/.",
       "downloads": 0,
