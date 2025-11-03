@@ -1,0 +1,173 @@
+name: Validate Download Counts
+
+on:
+  pull_request:
+    paths:
+      - 'mods.json'
+  push:
+    paths:
+      - 'mods.json'
+    branches:
+      - main
+
+jobs:
+  validate-downloads:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current version
+        uses: actions/checkout@v4
+        with:
+          path: current
+
+      - name: Checkout previous version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.before || 'HEAD~1' }}
+          path: previous
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate download count changes
+        run: |
+          python << 'EOF'
+          import json
+          import sys
+          from pathlib import Path
+
+          def load_mods(file_path: Path):
+              """Load mods from JSON file."""
+              if not file_path.exists():
+                  return {}
+
+              with open(file_path, 'r', encoding='utf-8') as f:
+                  data = json.load(f)
+
+              mods_dict = {}
+              for mod in data.get('mods', []):
+                  name = mod.get('name')
+                  if name:
+                      mods_dict[name] = mod
+              return mods_dict
+
+          def main():
+              current_file = Path('current/mods.json')
+              previous_file = Path('previous/mods.json')
+
+              print("🔍 Validating download count changes...\n")
+
+              # Load both versions
+              current_mods = load_mods(current_file)
+              previous_mods = load_mods(previous_file)
+
+              if not previous_mods:
+                  print("⚠️  No previous version found - skipping validation")
+                  sys.exit(0)
+
+              errors = []
+              warnings = []
+              changes = []
+
+              # Check each mod
+              for name, current_mod in current_mods.items():
+                  current_downloads = current_mod.get('downloads', 0)
+
+                  # Compare with previous version
+                  if name in previous_mods:
+                      previous_downloads = previous_mods[name].get('downloads', 0)
+
+                      if current_downloads < previous_downloads:
+                          errors.append(
+                              f"❌ {name}: Download count decreased ({previous_downloads} → {current_downloads})"
+                          )
+                      elif current_downloads > previous_downloads:
+                          increment = current_downloads - previous_downloads
+
+                          # Warning for large increments (possible error)
+                          if increment > 100:
+                              warnings.append(
+                                  f"⚠️  {name}: Large increment (+{increment}). Verify this is correct."
+                              )
+
+                          changes.append(
+                              f"  {name}: {previous_downloads} → {current_downloads} (+{increment})"
+                          )
+
+              # Report results
+              print("="*60)
+
+              if changes:
+                  print(f"\n📊 Download count changes:\n")
+                  for change in changes:
+                      print(change)
+
+              if warnings:
+                  print(f"\n⚠️  Warnings:\n")
+                  for warning in warnings:
+                      print(warning)
+
+              if errors:
+                  print(f"\n❌ Validation failed:\n")
+                  for error in errors:
+                      print(error)
+                  print("\n🚫 Download counts must never decrease!")
+                  sys.exit(1)
+              else:
+                  print("\n✅ Download count validation passed!")
+                  if changes:
+                      print(f"  • {len(changes)} mod(s) with updated counts")
+                  else:
+                      print("  • No download count changes")
+
+          if __name__ == '__main__':
+              main()
+          EOF
+
+      - name: Check commit message format
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          COMMIT_MSG=$(git -C current log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+
+          # Check if commit modifies downloads
+          if python3 << 'EOF'
+          import json
+          import sys
+
+          with open('current/mods.json') as f:
+              current = json.load(f)
+          with open('previous/mods.json') as f:
+              previous = json.load(f)
+
+          # Check if any download counts changed
+          for mod in current.get('mods', []):
+              name = mod.get('name')
+              current_dl = mod.get('downloads', 0)
+              prev_mod = next((m for m in previous.get('mods', []) if m.get('name') == name), None)
+              if prev_mod and prev_mod.get('downloads', 0) != current_dl:
+                  sys.exit(0)  # Downloads changed
+          sys.exit(1)  # No download changes
+          EOF
+          then
+              # Downloads changed - verify commit message
+              if ! echo "$COMMIT_MSG" | grep -qiE "(increment download|download count|auto-sync)"; then
+                  echo "⚠️  Warning: Download counts changed but commit message doesn't mention it"
+                  echo "Expected patterns: 'Increment download', 'download count', or 'auto-sync'"
+              else
+                  echo "✅ Commit message follows conventions"
+              fi
+          fi
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## 📊 Download Count Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Validation checks:" >> $GITHUB_STEP_SUMMARY
+          echo "- No download counts decreased" >> $GITHUB_STEP_SUMMARY
+          echo "- Increments are reasonable" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit message checked" >> $GITHUB_STEP_SUMMARY

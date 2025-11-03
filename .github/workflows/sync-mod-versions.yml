@@ -1,0 +1,254 @@
+name: Sync Mod Versions
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no commits)'
+        required: false
+        default: 'false'
+  push:
+    paths:
+      - 'mods.json'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-versions:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Sync mod versions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          python << 'EOF'
+          import json
+          import os
+          import re
+          import sys
+          from pathlib import Path
+          from typing import Dict, Optional, Tuple
+          import requests
+
+          def get_github_token() -> str:
+              """Get GitHub token from environment."""
+              token = os.environ.get('GITHUB_TOKEN', '')
+              if not token:
+                  print("⚠️  No GitHub token found, using unauthenticated requests (60/hour limit)")
+              return token
+
+          def parse_version(version_str: str) -> Optional[Tuple[int, ...]]:
+              """Parse semantic version string into tuple for comparison."""
+              # Remove 'v' prefix if present
+              version_str = version_str.lstrip('v')
+              # Match semantic versioning: major.minor.patch
+              match = re.match(r'^(\d+)\.(\d+)\.(\d+)', version_str)
+              if match:
+                  return tuple(map(int, match.groups()))
+              return None
+
+          def compare_versions(v1: str, v2: str) -> int:
+              """
+              Compare two version strings.
+              Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+              """
+              parsed_v1 = parse_version(v1)
+              parsed_v2 = parse_version(v2)
+
+              if not parsed_v1 or not parsed_v2:
+                  return 0
+
+              if parsed_v1 > parsed_v2:
+                  return 1
+              elif parsed_v1 < parsed_v2:
+                  return -1
+              return 0
+
+          def get_latest_github_release(repo: str, token: str) -> Optional[Dict]:
+              """
+              Query GitHub API for latest release.
+              Returns: {'version': 'v1.2.3', 'tag_name': 'v1.2.3', 'published_at': '...'}
+              """
+              url = f"https://api.github.com/repos/{repo}/releases/latest"
+              headers = {}
+              if token:
+                  headers['Authorization'] = f'token {token}'
+
+              try:
+                  response = requests.get(url, headers=headers, timeout=10)
+
+                  # Check rate limit
+                  remaining = response.headers.get('X-RateLimit-Remaining', 'unknown')
+                  print(f"  Rate limit remaining: {remaining}")
+
+                  if response.status_code == 404:
+                      print(f"  ⚠️  No releases found for {repo}")
+                      return None
+
+                  response.raise_for_status()
+                  data = response.json()
+
+                  return {
+                      'version': data['tag_name'],
+                      'tag_name': data['tag_name'],
+                      'published_at': data['published_at'],
+                      'html_url': data['html_url']
+                  }
+              except requests.exceptions.RequestException as e:
+                  print(f"  ❌ Error fetching {repo}: {e}")
+                  return None
+
+          def main():
+              # Load mods.json
+              mods_file = Path('mods.json')
+              if not mods_file.exists():
+                  print("❌ mods.json not found!")
+                  sys.exit(1)
+
+              with open(mods_file, 'r', encoding='utf-8') as f:
+                  data = json.load(f)
+
+              mods = data.get('mods', [])
+              token = get_github_token()
+              dry_run = os.environ.get('DRY_RUN', 'false').lower() == 'true'
+
+              if dry_run:
+                  print("🔍 DRY RUN MODE - No changes will be committed\n")
+
+              print(f"📦 Checking {len(mods)} mods for updates...\n")
+
+              updates = []
+              errors = []
+
+              for mod in mods:
+                  mod_name = mod.get('name', 'Unknown')
+                  current_version = mod.get('version', '0.0.0')
+                  download_info = mod.get('download', {})
+
+                  if download_info.get('type') != 'github_release':
+                      continue
+
+                  repo = download_info.get('repo')
+                  if not repo:
+                      continue
+
+                  print(f"🔍 Checking {mod_name} (current: {current_version})")
+
+                  # Query GitHub for latest release
+                  latest_release = get_latest_github_release(repo, token)
+
+                  if not latest_release:
+                      errors.append(mod_name)
+                      continue
+
+                  latest_version = latest_release['version']
+                  print(f"  Latest on GitHub: {latest_version}")
+
+                  # Compare versions
+                  if compare_versions(latest_version, current_version) > 0:
+                      print(f"  ✅ Update available: {current_version} → {latest_version}")
+                      updates.append({
+                          'mod': mod,
+                          'old_version': current_version,
+                          'new_version': latest_version,
+                          'release_url': latest_release['html_url']
+                      })
+
+                      # Update mod entry
+                      mod['version'] = latest_version
+                  else:
+                      print(f"  ✓ Up to date")
+
+                  print()
+
+              # Summary
+              print("\n" + "="*60)
+              print(f"📊 Summary:")
+              print(f"  Total mods checked: {len([m for m in mods if m.get('download', {}).get('type') == 'github_release'])}")
+              print(f"  Updates found: {len(updates)}")
+              print(f"  Errors: {len(errors)}")
+
+              if updates:
+                  print(f"\n🎉 Updates to apply:")
+                  for update in updates:
+                      print(f"  - {update['mod']['name']}: {update['old_version']} → {update['new_version']}")
+
+              if errors:
+                  print(f"\n⚠️  Mods with errors:")
+                  for mod_name in errors:
+                      print(f"  - {mod_name}")
+
+              # Save changes
+              if updates and not dry_run:
+                  with open(mods_file, 'w', encoding='utf-8') as f:
+                      json.dump(data, f, indent=2, ensure_ascii=False)
+                      f.write('\n')  # Add trailing newline
+
+                  print(f"\n✅ Updated mods.json with {len(updates)} version changes")
+
+                  # Set output for commit step
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                      f.write(f"updates_found=true\n")
+                      f.write(f"update_count={len(updates)}\n")
+                      # Create commit message
+                      if len(updates) == 1:
+                          update = updates[0]
+                          msg = f"Auto-sync: Updated {update['mod']['name']} to {update['new_version']}"
+                      else:
+                          msg = f"Auto-sync: Updated {len(updates)} mods to latest versions"
+                      f.write(f"commit_message={msg}\n")
+              else:
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                      f.write(f"updates_found=false\n")
+
+                  if not updates:
+                      print("\n✓ All mods are up to date!")
+                  elif dry_run:
+                      print("\n🔍 Dry run complete - no changes made")
+
+          if __name__ == '__main__':
+              main()
+          EOF
+
+      - name: Commit and push changes
+        if: steps.sync-versions.outputs.updates_found == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add mods.json
+          git commit -m "${{ steps.sync-versions.outputs.commit_message }}"
+          git push
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## 📦 Version Sync Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.sync-versions.outputs.updates_found }}" == "true" ]; then
+            echo "✅ Updated ${{ steps.sync-versions.outputs.update_count }} mod(s)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Changes committed and pushed to main branch." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✓ All mods are up to date!" >> $GITHUB_STEP_SUMMARY
+          fi
