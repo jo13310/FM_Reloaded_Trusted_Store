@@ -16,7 +16,19 @@ from urllib.request import Request, urlopen
 
 # Validation rules
 REQUIRED_FIELDS = ["name", "version", "type", "author", "description", "homepage", "download"]
-VALID_TYPES = ["ui", "graphics", "tactics", "database", "misc"]
+VALID_TYPES = [
+    "ui",
+    "bundle",
+    "camera",
+    "skins",
+    "graphics",
+    "tactics",
+    "database",
+    "ruleset",
+    "editor-data",
+    "audio",
+    "misc",
+]
 VERSION_PATTERN = r"^\d+\.\d+\.\d+$"  # Semantic versioning
 MAX_DESCRIPTION_LENGTH = 200
 GITHUB_REPO_PATTERN = r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"

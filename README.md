@@ -94,7 +94,7 @@ Your mod will be reviewed and added within 3-7 days.
 |-------|------|-------------|
 | `name` | string | Mod display name |
 | `version` | string | Latest version (semantic versioning) |
-| `type` | string | ui, graphics, tactics, database, or misc |
+| `type` | string | ui, bundle, camera, skins, graphics, tactics, database, ruleset, editor-data, audio, or misc |
 | `author` | string | Mod creator |
 | `description` | string | 1-2 sentence summary (max 200 chars) |
 | `homepage` | string | GitHub repository URL |

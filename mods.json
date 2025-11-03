@@ -12,7 +12,7 @@
     {
       "name": "ArthurRay PoV Camera Mod",
       "version": "1.1.0",
-      "type": "misc",
+      "type": "camera",
       "author": "GerKo & Brululul",
       "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
       "homepage": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod",
@@ -41,7 +41,7 @@
     {
       "name": "TorojoH Camera Mod",
       "version": "0.1.0",
-      "type": "misc",
+      "type": "camera",
       "author": "TorojoH",
       "description": "ArthurRay first-person camera variant maintained by TorojoH.",
       "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
@@ -69,7 +69,7 @@
     {
       "name": "Brululul Manager Free Camera",
       "version": "1.0.0",
-      "type": "misc",
+      "type": "camera",
       "author": "Brululul",
       "description": "Provides a fully controllable manager camera with smooth panning controls.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
