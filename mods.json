@@ -46,10 +46,8 @@
       "description": "ArthurRay first-person camera variant maintained by TorojoH.",
       "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
       "download": {
-        "type": "github_release",
-        "repo": "torojoh/FM26-Camera-Mod",
-        "asset": "ArthurRayPovMod.dll",
-        "latest": true
+        "type": "direct",
+        "url": "https://raw.githubusercontent.com/torojoh/FM26-Camera-Mod/main/Release/ArthurRayPovMod.dll"
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/FM_Reloaded_Trusted_Store/main/manifests/torojoh_camera.json",
       "install_notes": "Uses trusted manifest to place ArthurRayPovMod.dll into BepInEx/plugins/.",
@@ -127,10 +125,8 @@
       "description": "Consolidated real-name corrections for competitions, clubs, people, stadiums, and awards in a single clean LNC file.",
       "homepage": "https://github.com/jo13310/NameFixFM26",
       "download": {
-        "type": "github_release",
-        "repo": "jo13310/NameFixFM26",
-        "asset": "FM26-open-names.lnc",
-        "latest": true
+        "type": "direct",
+        "url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/assets/lnc/FM26-open-names.lnc"
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/manifest.json",
       "install_notes": "Stages FM26-open-names.lnc into shared/data/database/db/2600/lnc/all/ and removes conflicting stock licensing files via manifest cleanup directives.",
@@ -152,10 +148,8 @@
       "description": "Adds extended match speed options up to x80 for Football Manager 2026.",
       "homepage": "https://github.com/jo13310/GameSpeed-FM26",
       "download": {
-        "type": "github_release",
-        "repo": "jo13310/GameSpeed-FM26",
-        "asset": "gamemodules_assets_match.bundle",
-        "latest": true
+        "type": "direct",
+        "url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/gamemodules_assets_match.bundle"
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/manifest.json",
       "install_notes": "Copies gamemodules_assets_match.bundle into aa/StandaloneWindows64/.",
