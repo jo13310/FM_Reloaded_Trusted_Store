@@ -153,7 +153,7 @@
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/GameSpeed-FM26/main/manifest.json",
       "install_notes": "Copies gamemodules_assets_match.bundle into aa/StandaloneWindows64/.",
-      "downloads": 335,
+      "downloads": 336,
       "date_added": "2025-11-03",
       "last_updated": "2025-11-03",
       "dependencies": [],
