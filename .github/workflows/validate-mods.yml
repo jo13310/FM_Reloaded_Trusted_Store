@@ -49,6 +49,7 @@ jobs:
               "graphics",
               "tactics",
               "database",
+              "camera-database",
               "ruleset",
               "editor-data",
               "audio",

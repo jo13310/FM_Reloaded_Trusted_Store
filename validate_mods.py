@@ -16,7 +16,7 @@ from urllib.request import Request, urlopen
 
 # Validation rules
 REQUIRED_FIELDS = ["name", "version", "type", "author", "description", "homepage", "download"]
-VALID_TYPES = [
+VALID_TYPES = {
     "ui",
     "bundle",
     "camera",
@@ -24,11 +24,12 @@ VALID_TYPES = [
     "graphics",
     "tactics",
     "database",
+    "camera-database",
     "ruleset",
     "editor-data",
     "audio",
     "misc",
-]
+}
 VERSION_PATTERN = r"^\d+\.\d+\.\d+$"  # Semantic versioning
 MAX_DESCRIPTION_LENGTH = 200
 GITHUB_REPO_PATTERN = r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
@@ -129,6 +130,12 @@ def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str],
     return errors, warnings
 
 
+def normalise_type(value: str) -> str:
+    """Normalise a mod type for comparison."""
+
+    return re.sub(r"[\s_]+", "-", value.strip().lower())
+
+
 def validate_mod_entry(mod: Dict[str, Any], index: int) -> Tuple[List[str], List[str]]:
     """Validate a single mod entry."""
     errors: List[str] = []
@@ -145,11 +152,13 @@ def validate_mod_entry(mod: Dict[str, Any], index: int) -> Tuple[List[str], List
             errors.append(
                 f"Mod #{index} ({mod_name}): Invalid type '{mod_type}'. Must be a string"
             )
-        elif mod_type.lower() not in VALID_TYPES:
-            errors.append(
-                f"Mod #{index} ({mod_name}): Invalid type '{mod_type}'. "
-                f"Must be one of: {', '.join(VALID_TYPES)}"
-            )
+        else:
+            type_key = normalise_type(mod_type)
+            if type_key not in VALID_TYPES:
+                errors.append(
+                    f"Mod #{index} ({mod_name}): Invalid type '{mod_type}'. "
+                    f"Must be one of: {', '.join(sorted(VALID_TYPES))}"
+                )
 
     if "version" in mod and not validate_version(mod["version"]):
         errors.append(
