@@ -68,9 +68,16 @@ jobs:
 
               # Validate type
               if 'type' in mod:
-                  valid_types = ['ui', 'graphics', 'tactics', 'misc', 'bundle']
-                  if mod['type'] not in valid_types:
-                      errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Invalid type '{mod['type']}' (expected: {', '.join(valid_types)})")
+                  valid_types = ['ui', 'graphics', 'tactics', 'misc', 'bundle', 'camera', 'database']
+                  mod_type = mod['type']
+                  if isinstance(mod_type, str):
+                      type_key = mod_type.lower()
+                  else:
+                      type_key = mod_type
+                  if type_key not in valid_types:
+                      errors.append(
+                          f"{prefix} ({mod.get('name', 'Unknown')}): Invalid type '{mod_type}' (expected: {', '.join(valid_types)})"
+                      )
 
               # Validate downloads (must be non-negative integer)
               if 'downloads' in mod:
