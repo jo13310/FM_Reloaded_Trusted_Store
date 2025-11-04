@@ -130,7 +130,7 @@
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/NameFixFM26/main/manifest.json",
       "install_notes": "Stages FM26-open-names.lnc into shared/data/database/db/2600/lnc/all/ and removes conflicting stock licensing files via manifest cleanup directives.",
-      "downloads": 80,
+      "downloads": 81,
       "date_added": "2025-11-03",
       "last_updated": "2025-11-03",
       "dependencies": [],
