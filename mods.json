@@ -25,7 +25,7 @@
       "changelog_url": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod/releases/tag/v1.0.0",
       "manifest_url": "https://raw.githubusercontent.com/jo13310/Arthur-s---PoV-Camera-Mod/main/manifest.json",
       "install_notes": "Installs ArthurRayPovMod.dll into BepInEx/plugins/ via manifest mapping.",
-      "downloads": 69,
+      "downloads": 70,
       "date_added": "2025-02-11",
       "last_updated": "2025-02-11",
       "dependencies": [],
