@@ -41,6 +41,24 @@ jobs:
               pattern = r'^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+(/.*)?$'
               return bool(re.match(pattern, url))
 
+          VALID_TYPES = {
+              "ui",
+              "bundle",
+              "camera",
+              "skins",
+              "graphics",
+              "tactics",
+              "database",
+              "ruleset",
+              "editor-data",
+              "audio",
+              "misc",
+          }
+
+          def normalise_type(value: str) -> str:
+              """Normalise a mod type so comparisons match the CLI validator."""
+              return re.sub(r"[\s_]+", "-", value.strip().lower())
+
           def validate_mod(mod: Dict[str, Any], index: int) -> List[str]:
               """Validate a single mod entry. Returns list of errors."""
               errors = []
@@ -68,15 +86,15 @@ jobs:
 
               # Validate type
               if 'type' in mod:
-                  valid_types = ['ui', 'graphics', 'tactics', 'misc', 'bundle', 'camera', 'database']
                   mod_type = mod['type']
                   if isinstance(mod_type, str):
-                      type_key = mod_type.lower()
+                      type_key = normalise_type(mod_type)
                   else:
                       type_key = mod_type
-                  if type_key not in valid_types:
+                  if type_key not in VALID_TYPES:
                       errors.append(
-                          f"{prefix} ({mod.get('name', 'Unknown')}): Invalid type '{mod_type}' (expected: {', '.join(valid_types)})"
+                          f"{prefix} ({mod.get('name', 'Unknown')}): Invalid type '{mod_type}' "
+                          f"(expected: {', '.join(sorted(VALID_TYPES))})"
                       )
 
               # Validate downloads (must be non-negative integer)
