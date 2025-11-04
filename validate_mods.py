@@ -74,21 +74,21 @@ def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str],
         return errors, warnings
 
     download_type = download.get("type")
-    if download_type not in {"github_release"}:
+    if download_type not in {"github_release", "direct"}:
         errors.append(
             f"Mod #{index} ({mod.get('name', 'Unknown')}): Unsupported download type "
-            f"'{download_type}'. Supported types: github_release"
+            f"'{download_type}'. Supported types: github_release, direct"
         )
         return errors, warnings
 
-    repo = download.get("repo")
-    if not repo or not re.match(GITHUB_REPO_PATTERN, repo):
-        errors.append(
-            f"Mod #{index} ({mod.get('name', 'Unknown')}): download.repo must look like "
-            "owner/repository"
-        )
-
     if download_type == "github_release":
+        repo = download.get("repo")
+        if not repo or not re.match(GITHUB_REPO_PATTERN, repo):
+            errors.append(
+                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.repo must look like "
+                "owner/repository"
+            )
+
         asset = download.get("asset")
         if not asset or not isinstance(asset, str):
             errors.append(
@@ -115,6 +115,17 @@ def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str],
                     f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag_prefix must be a string"
                 )
 
+    if download_type == "direct":
+        url = download.get("url")
+        if not url or not isinstance(url, str):
+            errors.append(
+                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.url is required for direct downloads"
+            )
+        elif not validate_url(url):
+            errors.append(
+                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.url must be a valid URL"
+            )
+
     return errors, warnings
 
 
@@ -128,11 +139,17 @@ def validate_mod_entry(mod: Dict[str, Any], index: int) -> Tuple[List[str], List
         if field not in mod:
             errors.append(f"Mod #{index} ({mod_name}): Missing required field '{field}'")
 
-    if "type" in mod and mod["type"] not in VALID_TYPES:
-        errors.append(
-            f"Mod #{index} ({mod_name}): Invalid type '{mod['type']}'. "
-            f"Must be one of: {', '.join(VALID_TYPES)}"
-        )
+    if "type" in mod:
+        mod_type = mod["type"]
+        if not isinstance(mod_type, str):
+            errors.append(
+                f"Mod #{index} ({mod_name}): Invalid type '{mod_type}'. Must be a string"
+            )
+        elif mod_type.lower() not in VALID_TYPES:
+            errors.append(
+                f"Mod #{index} ({mod_name}): Invalid type '{mod_type}'. "
+                f"Must be one of: {', '.join(VALID_TYPES)}"
+            )
 
     if "version" in mod and not validate_version(mod["version"]):
         errors.append(

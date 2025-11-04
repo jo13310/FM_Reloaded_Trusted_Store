@@ -12,7 +12,7 @@
     {
       "name": "ArthurRay PoV Camera Mod",
       "version": "1.1.0",
-      "type": "camera",
+      "type": "Camera",
       "author": "GerKo & Brululul",
       "description": "Immersive first-person and technical area cameras with auto-triggered match highlights.",
       "homepage": "https://github.com/jo13310/Arthur-s---PoV-Camera-Mod",
@@ -41,7 +41,7 @@
     {
       "name": "TorojoH Camera Mod",
       "version": "0.1.0",
-      "type": "camera",
+      "type": "Camera",
       "author": "TorojoH",
       "description": "ArthurRay first-person camera variant maintained by TorojoH.",
       "homepage": "https://github.com/torojoh/FM26-Camera-Mod",
@@ -67,7 +67,7 @@
     {
       "name": "Brululul Manager Free Camera",
       "version": "1.0.0",
-      "type": "camera",
+      "type": "Camera",
       "author": "Brululul",
       "description": "Provides a fully controllable manager camera with smooth panning controls.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
@@ -95,7 +95,7 @@
     {
       "name": "Brululul Faster Match Startup",
       "version": "1.0.0",
-      "type": "misc",
+      "type": "Misc",
       "author": "Brululul",
       "description": "Skips non-essential cinematics to reduce time from tunnel to kickoff.",
       "homepage": "https://github.com/Valerio-Corso/FM26-Brul-mods",
@@ -120,7 +120,7 @@
     {
       "name": "NameFix FM26 Open Names Pack",
       "version": "1.1.0",
-      "type": "database",
+      "type": "Database",
       "author": "Community Maintainers",
       "description": "Consolidated real-name corrections for competitions, clubs, people, stadiums, and awards in a single clean LNC file.",
       "homepage": "https://github.com/jo13310/NameFixFM26",
@@ -143,7 +143,7 @@
     {
       "name": "GameSpeed Match Speed Mod",
       "version": "1.0.0",
-      "type": "misc",
+      "type": "Misc",
       "author": "GameSpeed",
       "description": "Adds extended match speed options up to x80 for Football Manager 2026.",
       "homepage": "https://github.com/jo13310/GameSpeed-FM26",
