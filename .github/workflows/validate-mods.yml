@@ -4,9 +4,13 @@ on:
   pull_request:
     paths:
       - 'mods.json'
+      - 'validate_mods.py'
+      - '.github/workflows/validate-mods.yml'
   push:
     paths:
       - 'mods.json'
+      - 'validate_mods.py'
+      - '.github/workflows/validate-mods.yml'
   workflow_dispatch:
 
 jobs:
@@ -22,153 +26,26 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Validate mods.json structure
+      - name: Run validator
         run: |
-          python << 'EOF'
-          import json
-          import re
-          import sys
-          from pathlib import Path
-          from typing import List, Dict, Any
+          set -eo pipefail
+          python validate_mods.py --mods-file mods.json | tee validation.log
 
-          def validate_version(version: str) -> bool:
-              """Validate semantic versioning format."""
-              pattern = r'^v?\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$'
-              return bool(re.match(pattern, version))
-
-          def validate_url(url: str) -> bool:
-              """Validate GitHub URL format."""
-              pattern = r'^https://github\.com/[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+(/.*)?$'
-              return bool(re.match(pattern, url))
-
-          def validate_mod(mod: Dict[str, Any], index: int) -> List[str]:
-              """Validate a single mod entry. Returns list of errors."""
-              errors = []
-              prefix = f"Mod #{index + 1}"
-
-              # Required fields
-              required_fields = ['name', 'version', 'type', 'author', 'description', 'download']
-              for field in required_fields:
-                  if field not in mod:
-                      errors.append(f"{prefix}: Missing required field '{field}'")
-                  elif not mod[field]:
-                      errors.append(f"{prefix}: Field '{field}' cannot be empty")
-
-              # Validate name
-              if 'name' in mod:
-                  name = mod['name']
-                  if not isinstance(name, str) or len(name.strip()) == 0:
-                      errors.append(f"{prefix}: Invalid name")
-
-              # Validate version
-              if 'version' in mod:
-                  version = mod['version']
-                  if not validate_version(version):
-                      errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Invalid version format '{version}' (expected: v1.2.3 or 1.2.3)")
-
-              # Validate type
-              if 'type' in mod:
-                  valid_types = ['ui', 'graphics', 'tactics', 'misc', 'bundle']
-                  if mod['type'] not in valid_types:
-                      errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Invalid type '{mod['type']}' (expected: {', '.join(valid_types)})")
-
-              # Validate downloads (must be non-negative integer)
-              if 'downloads' in mod:
-                  downloads = mod['downloads']
-                  if not isinstance(downloads, int) or downloads < 0:
-                      errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Invalid downloads count '{downloads}' (must be non-negative integer)")
-
-              # Validate download section
-              if 'download' in mod:
-                  download = mod['download']
-                  if not isinstance(download, dict):
-                      errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): 'download' must be an object")
-                  else:
-                      # Check required download fields
-                      if 'type' not in download:
-                          errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Missing 'download.type'")
-                      elif download['type'] == 'github_release':
-                          if 'repo' not in download:
-                              errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Missing 'download.repo' for github_release")
-                          else:
-                              # Validate repo format (owner/repo)
-                              if not re.match(r'^[a-zA-Z0-9_-]+/[a-zA-Z0-9_.-]+$', download['repo']):
-                                  errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Invalid repo format '{download['repo']}' (expected: owner/repo)")
-
-                          if 'asset' not in download:
-                              errors.append(f"{prefix} ({mod.get('name', 'Unknown')}): Missing 'download.asset' for github_release")
-
-              return errors
-
-          def main():
-              # Load mods.json
-              mods_file = Path('mods.json')
-              if not mods_file.exists():
-                  print("❌ mods.json not found!")
-                  sys.exit(1)
-
-              print("🔍 Validating mods.json...\n")
-
-              # Parse JSON
-              try:
-                  with open(mods_file, 'r', encoding='utf-8') as f:
-                      data = json.load(f)
-              except json.JSONDecodeError as e:
-                  print(f"❌ Invalid JSON: {e}")
-                  sys.exit(1)
-
-              # Check root structure
-              if 'mods' not in data:
-                  print("❌ Missing 'mods' array at root level")
-                  sys.exit(1)
-
-              mods = data['mods']
-              if not isinstance(mods, list):
-                  print("❌ 'mods' must be an array")
-                  sys.exit(1)
-
-              print(f"📦 Found {len(mods)} mods to validate\n")
-
-              # Validate each mod
-              all_errors = []
-              mod_names = []
-
-              for index, mod in enumerate(mods):
-                  errors = validate_mod(mod, index)
-                  all_errors.extend(errors)
-
-                  # Check for duplicate names
-                  name = mod.get('name', '')
-                  if name in mod_names:
-                      all_errors.append(f"Duplicate mod name: '{name}'")
-                  mod_names.append(name)
-
-              # Report results
-              print("="*60)
-              if all_errors:
-                  print(f"\n❌ Validation failed with {len(all_errors)} error(s):\n")
-                  for error in all_errors:
-                      print(f"  • {error}")
-                  sys.exit(1)
-              else:
-                  print("\n✅ All validations passed!")
-                  print(f"  • {len(mods)} mods validated successfully")
-                  print(f"  • No duplicate names")
-                  print(f"  • All required fields present")
-                  print(f"  • All versions valid")
-                  print(f"  • All download configurations valid")
-
-          if __name__ == '__main__':
-              main()
-          EOF
-
-      - name: Create summary
+      - name: Publish summary
         if: always()
         run: |
-          echo "## 🔍 Mods.json Validation" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ $? -eq 0 ]; then
-            echo "✅ Validation passed!" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Validation failed! See job logs for details." >> $GITHUB_STEP_SUMMARY
-          fi
+          {
+            echo "## Mods.json Validation"
+            echo
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "Validation succeeded."
+            else
+              echo "Validation failed. See job logs for details."
+            fi
+            if [ -f validation.log ]; then
+              echo
+              echo '```'
+              cat validation.log
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

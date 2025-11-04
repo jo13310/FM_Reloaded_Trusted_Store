@@ -23,9 +23,9 @@ jobs:
       - name: Checkout previous version
         uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           ref: ${{ github.event.before || 'HEAD~1' }}
           path: previous
-          fetch-depth: 2
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,140 +34,125 @@ jobs:
 
       - name: Validate download count changes
         run: |
-          python << 'EOF'
+          set -eo pipefail
+          python <<'PY' | tee download_validation.log
           import json
           import sys
           from pathlib import Path
 
-          def load_mods(file_path: Path):
-              """Load mods from JSON file."""
-              if not file_path.exists():
+
+          def load_mods(path: Path) -> dict[str, dict]:
+              if not path.exists():
                   return {}
+              with path.open("r", encoding="utf-8") as handle:
+                  data = json.load(handle)
+              return {
+                  mod.get("name", ""): mod
+                  for mod in data.get("mods", [])
+                  if mod.get("name")
+              }
 
-              with open(file_path, 'r', encoding='utf-8') as f:
-                  data = json.load(f)
 
-              mods_dict = {}
-              for mod in data.get('mods', []):
-                  name = mod.get('name')
-                  if name:
-                      mods_dict[name] = mod
-              return mods_dict
+          current = load_mods(Path("current/mods.json"))
+          previous = load_mods(Path("previous/mods.json"))
 
-          def main():
-              current_file = Path('current/mods.json')
-              previous_file = Path('previous/mods.json')
+          print("Validating download count changes\n")
 
-              print("🔍 Validating download count changes...\n")
+          if not previous:
+              print("No previous mods.json found; skipping validation.")
+              sys.exit(0)
 
-              # Load both versions
-              current_mods = load_mods(current_file)
-              previous_mods = load_mods(previous_file)
+          errors: list[str] = []
+          warnings: list[str] = []
+          updates: list[str] = []
 
-              if not previous_mods:
-                  print("⚠️  No previous version found - skipping validation")
-                  sys.exit(0)
+          for name, current_mod in current.items():
+              current_dl = current_mod.get("downloads", 0)
+              previous_dl = previous.get(name, {}).get("downloads", 0)
 
-              errors = []
-              warnings = []
-              changes = []
+              if current_dl < previous_dl:
+                  errors.append(
+                      f"{name}: download count decreased ({previous_dl} -> {current_dl})"
+                  )
+              elif current_dl > previous_dl:
+                  increment = current_dl - previous_dl
+                  updates.append(f"{name}: {previous_dl} -> {current_dl} (+{increment})")
+                  if increment > 100:
+                      warnings.append(
+                          f"{name}: large increment (+{increment}); verify intended."
+                      )
 
-              # Check each mod
-              for name, current_mod in current_mods.items():
-                  current_downloads = current_mod.get('downloads', 0)
+          if updates:
+              print("Detected download count increases:")
+              for line in updates:
+                  print(f"  {line}")
+              print()
 
-                  # Compare with previous version
-                  if name in previous_mods:
-                      previous_downloads = previous_mods[name].get('downloads', 0)
+          if warnings:
+              print("Warnings:")
+              for line in warnings:
+                  print(f"  {line}")
+              print()
 
-                      if current_downloads < previous_downloads:
-                          errors.append(
-                              f"❌ {name}: Download count decreased ({previous_downloads} → {current_downloads})"
-                          )
-                      elif current_downloads > previous_downloads:
-                          increment = current_downloads - previous_downloads
+          if errors:
+              print("Validation failed. Downloads must not decrease:")
+              for line in errors:
+                  print(f"  {line}")
+              sys.exit(1)
 
-                          # Warning for large increments (possible error)
-                          if increment > 100:
-                              warnings.append(
-                                  f"⚠️  {name}: Large increment (+{increment}). Verify this is correct."
-                              )
-
-                          changes.append(
-                              f"  {name}: {previous_downloads} → {current_downloads} (+{increment})"
-                          )
-
-              # Report results
-              print("="*60)
-
-              if changes:
-                  print(f"\n📊 Download count changes:\n")
-                  for change in changes:
-                      print(change)
-
-              if warnings:
-                  print(f"\n⚠️  Warnings:\n")
-                  for warning in warnings:
-                      print(warning)
-
-              if errors:
-                  print(f"\n❌ Validation failed:\n")
-                  for error in errors:
-                      print(error)
-                  print("\n🚫 Download counts must never decrease!")
-                  sys.exit(1)
-              else:
-                  print("\n✅ Download count validation passed!")
-                  if changes:
-                      print(f"  • {len(changes)} mod(s) with updated counts")
-                  else:
-                      print("  • No download count changes")
-
-          if __name__ == '__main__':
-              main()
-          EOF
+          print("Validation passed. No download count regressions detected.")
+          PY
 
       - name: Check commit message format
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          set -euo pipefail
           COMMIT_MSG=$(git -C current log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MSG"
 
-          # Check if commit modifies downloads
-          if python3 << 'EOF'
+          if python <<'PY'
           import json
           import sys
 
-          with open('current/mods.json') as f:
-              current = json.load(f)
-          with open('previous/mods.json') as f:
-              previous = json.load(f)
+          with open('current/mods.json', 'r', encoding='utf-8') as handle:
+              current = json.load(handle)
+          with open('previous/mods.json', 'r', encoding='utf-8') as handle:
+              previous = json.load(handle)
 
-          # Check if any download counts changed
           for mod in current.get('mods', []):
               name = mod.get('name')
+              if not name:
+                  continue
               current_dl = mod.get('downloads', 0)
-              prev_mod = next((m for m in previous.get('mods', []) if m.get('name') == name), None)
-              if prev_mod and prev_mod.get('downloads', 0) != current_dl:
-                  sys.exit(0)  # Downloads changed
-          sys.exit(1)  # No download changes
-          EOF
+              previous_mod = next(
+                  (item for item in previous.get('mods', []) if item.get('name') == name),
+                  None,
+              )
+              if previous_mod and previous_mod.get('downloads', 0) != current_dl:
+                  sys.exit(0)
+          sys.exit(1)
+          PY
           then
-              # Downloads changed - verify commit message
               if ! echo "$COMMIT_MSG" | grep -qiE "(increment download|download count|auto-sync)"; then
-                  echo "⚠️  Warning: Download counts changed but commit message doesn't mention it"
-                  echo "Expected patterns: 'Increment download', 'download count', or 'auto-sync'"
+                  echo "::warning::Download counts changed but commit message does not mention it."
               else
-                  echo "✅ Commit message follows conventions"
+                  echo "Commit message acknowledges download count changes."
               fi
+          else
+              echo "No download count changes detected; commit message check skipped."
           fi
 
-      - name: Create summary
+      - name: Publish summary
         if: always()
         run: |
-          echo "## 📊 Download Count Validation" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Validation checks:" >> $GITHUB_STEP_SUMMARY
-          echo "- No download counts decreased" >> $GITHUB_STEP_SUMMARY
-          echo "- Increments are reasonable" >> $GITHUB_STEP_SUMMARY
-          echo "- Commit message checked" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Download Count Validation"
+            echo
+            echo "Job status: ${{ job.status }}"
+            if [ -f download_validation.log ]; then
+              echo
+              echo '```'
+              cat download_validation.log
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

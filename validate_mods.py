@@ -29,6 +29,7 @@ VALID_TYPES = [
     "audio",
     "misc",
 ]
+SUPPORTED_DOWNLOAD_TYPES = {"github_release", "direct"}
 VERSION_PATTERN = r"^\d+\.\d+\.\d+$"  # Semantic versioning
 MAX_DESCRIPTION_LENGTH = 200
 GITHUB_REPO_PATTERN = r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
@@ -47,18 +48,34 @@ def load_json(file_path: Path) -> Tuple[bool, Optional[Dict[str, Any]], Optional
         return False, None, f"Unable to read file: {exc}"
 
 
-def validate_url(url: str) -> bool:
+def validate_url(url: Any) -> bool:
     """Validate URL format."""
+    if not isinstance(url, str):
+        return False
+
+    candidate = url.strip()
+    if not candidate:
+        return False
+
     try:
-        result = urlparse(url)
-        return bool(result.scheme and result.netloc)
+        result = urlparse(candidate)
     except ValueError:
         return False
+
+    if result.scheme not in {"http", "https"}:
+        return False
+
+    return bool(result.netloc)
 
 
 def validate_version(version: str) -> bool:
     """Validate semantic versioning format."""
-    return bool(re.match(VERSION_PATTERN, version))
+    if not isinstance(version, str):
+        return False
+    candidate = version.strip()
+    if not candidate:
+        return False
+    return bool(re.match(VERSION_PATTERN, candidate))
 
 
 def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str], List[str]]:
@@ -66,53 +83,77 @@ def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str],
     errors: List[str] = []
     warnings: List[str] = []
     download = mod.get("download")
+    mod_name = mod.get("name", "Unknown")
 
     if not isinstance(download, dict):
         errors.append(
-            f"Mod #{index} ({mod.get('name', 'Unknown')}): 'download' must be an object"
+            f"Mod #{index} ({mod_name}): 'download' must be an object"
         )
         return errors, warnings
 
-    download_type = download.get("type")
-    if download_type not in {"github_release"}:
+    raw_type = download.get("type")
+    if not isinstance(raw_type, str) or not raw_type.strip():
         errors.append(
-            f"Mod #{index} ({mod.get('name', 'Unknown')}): Unsupported download type "
-            f"'{download_type}'. Supported types: github_release"
+            f"Mod #{index} ({mod_name}): download.type must be a non-empty string"
         )
         return errors, warnings
 
-    repo = download.get("repo")
-    if not repo or not re.match(GITHUB_REPO_PATTERN, repo):
+    download_type = raw_type.strip().lower()
+    if download_type not in SUPPORTED_DOWNLOAD_TYPES:
         errors.append(
-            f"Mod #{index} ({mod.get('name', 'Unknown')}): download.repo must look like "
-            "owner/repository"
+            f"Mod #{index} ({mod_name}): Unsupported download type '{raw_type}'. "
+            f"Supported types: {', '.join(sorted(SUPPORTED_DOWNLOAD_TYPES))}"
         )
+        return errors, warnings
+
+    if download_type == "direct":
+        url = download.get("url")
+        if not isinstance(url, str) or not url.strip():
+            errors.append(
+                f"Mod #{index} ({mod_name}): download.url is required for direct downloads"
+            )
+        elif not validate_url(url):
+            errors.append(
+                f"Mod #{index} ({mod_name}): download.url must be a valid http(s) URL"
+            )
+
+        checksum = download.get("checksum")
+        if checksum is not None and not isinstance(checksum, str):
+            warnings.append(
+                f"Mod #{index} ({mod_name}): download.checksum should be a string when provided"
+            )
 
     if download_type == "github_release":
+        repo = download.get("repo")
+        if not isinstance(repo, str) or not re.match(GITHUB_REPO_PATTERN, repo.strip()):
+            errors.append(
+                f"Mod #{index} ({mod_name}): download.repo must look like owner/repository"
+            )
+
         asset = download.get("asset")
         if not asset or not isinstance(asset, str):
             errors.append(
-                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.asset is required "
+                f"Mod #{index} ({mod_name}): download.asset is required "
                 "for github_release downloads"
             )
 
         latest_flag = download.get("latest")
         if latest_flag not in (None, False, True):
             errors.append(
-                f"Mod #{index} ({mod.get('name', 'Unknown')}): download.latest must be boolean when provided"
+                f"Mod #{index} ({mod_name}): download.latest must be boolean when provided"
             )
 
         if not latest_flag:
             tag_override = download.get("tag")
             if tag_override and not isinstance(tag_override, str):
                 errors.append(
-                    f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag must be a string"
+                    f"Mod #{index} ({mod_name}): download.tag must be a string"
                 )
 
             tag_prefix = download.get("tag_prefix", DEFAULT_TAG_PREFIX)
             if not isinstance(tag_prefix, str):
                 errors.append(
-                    f"Mod #{index} ({mod.get('name', 'Unknown')}): download.tag_prefix must be a string"
+                    f"Mod #{index} ({mod_name}): download.tag_prefix must be a string"
                 )
 
     return errors, warnings
@@ -128,11 +169,23 @@ def validate_mod_entry(mod: Dict[str, Any], index: int) -> Tuple[List[str], List
         if field not in mod:
             errors.append(f"Mod #{index} ({mod_name}): Missing required field '{field}'")
 
-    if "type" in mod and mod["type"] not in VALID_TYPES:
-        errors.append(
-            f"Mod #{index} ({mod_name}): Invalid type '{mod['type']}'. "
-            f"Must be one of: {', '.join(VALID_TYPES)}"
-        )
+    if "type" in mod:
+        type_value = mod.get("type")
+        if not isinstance(type_value, str) or not type_value.strip():
+            errors.append(
+                f"Mod #{index} ({mod_name}): Field 'type' must be a non-empty string"
+            )
+        else:
+            canonical_type = type_value.strip().lower()
+            if canonical_type not in VALID_TYPES:
+                errors.append(
+                    f"Mod #{index} ({mod_name}): Invalid type '{type_value}'. "
+                    f"Must be one of: {', '.join(VALID_TYPES)}"
+                )
+            elif type_value != canonical_type:
+                warnings.append(
+                    f"Mod #{index} ({mod_name}): Type '{type_value}' should use lowercase '{canonical_type}'"
+                )
 
     if "version" in mod and not validate_version(mod["version"]):
         errors.append(
