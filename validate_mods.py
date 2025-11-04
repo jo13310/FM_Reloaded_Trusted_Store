@@ -345,17 +345,45 @@ def verify_github_release(
             return errors, warnings
 
     assets = release.get("assets", [])
-    asset_names = {asset.get("name") for asset in assets}
-    if asset_name not in asset_names:
-        errors.append(
-            f"Mod #{index} ({mod['name']}): asset '{asset_name}' not found in release {tag_name}"
-        )
-    else:
-        asset = next(asset for asset in assets if asset.get("name") == asset_name)
-        if not asset.get("browser_download_url"):
+    asset = next((item for item in assets if item.get("name") == asset_name), None)
+
+    if asset is None:
+        asset_basename = Path(asset_name).name
+        asset_stem = Path(asset_basename).stem
+
+        fallback_asset = None
+        for item in assets:
+            candidate_name = item.get("name") or ""
+            candidate_stem = Path(candidate_name).stem if candidate_name else ""
+            if (
+                asset_basename == candidate_name
+                or asset_basename in candidate_name
+                or asset_stem == candidate_stem
+                or candidate_stem.startswith(asset_stem)
+            ):
+                fallback_asset = item
+                break
+
+        if fallback_asset is not None:
             warnings.append(
-                f"Mod #{index} ({mod['name']}): asset '{asset_name}' is missing download URL"
+                f"Mod #{index} ({mod['name']}): asset '{asset_name}' not found in release {tag_name}; "
+                f"using '{fallback_asset.get('name')}' based on name similarity"
             )
+            asset = fallback_asset
+        elif mod.get("manifest_url"):
+            warnings.append(
+                f"Mod #{index} ({mod['name']}): asset '{asset_name}' not found in release {tag_name}; "
+                "continuing because manifest_url is provided"
+            )
+        else:
+            errors.append(
+                f"Mod #{index} ({mod['name']}): asset '{asset_name}' not found in release {tag_name}"
+            )
+
+    if asset is not None and not asset.get("browser_download_url"):
+        warnings.append(
+            f"Mod #{index} ({mod['name']}): asset '{asset.get('name')}' is missing download URL"
+        )
 
     if use_latest:
         latest_release = release
