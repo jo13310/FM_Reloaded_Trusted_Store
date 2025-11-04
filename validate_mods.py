@@ -16,7 +16,7 @@ from urllib.request import Request, urlopen
 
 # Validation rules
 REQUIRED_FIELDS = ["name", "version", "type", "author", "description", "homepage", "download"]
-VALID_TYPES = {
+BASE_MOD_TYPES = {
     "ui",
     "bundle",
     "camera",
@@ -30,6 +30,10 @@ VALID_TYPES = {
     "audio",
     "misc",
 }
+
+# Normalised set used for validation. Keeping this separate makes it easy for
+# the GitHub workflow to import and stay in sync with any future additions.
+VALID_TYPES = {type_name for type_name in BASE_MOD_TYPES}
 VERSION_PATTERN = r"^\d+\.\d+\.\d+$"  # Semantic versioning
 MAX_DESCRIPTION_LENGTH = 200
 GITHUB_REPO_PATTERN = r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
@@ -133,7 +137,11 @@ def validate_download_block(mod: Dict[str, Any], index: int) -> Tuple[List[str],
 def normalise_type(value: str) -> str:
     """Normalise a mod type for comparison."""
 
-    return re.sub(r"[\s_]+", "-", value.strip().lower())
+    # ``casefold`` provides a more robust, locale-independent lowercasing than
+    # ``lower`` which ensures values like "Camera" or "DATABASE" map to the
+    # expected canonical form. Underscores or whitespace are collapsed to
+    # hyphens to match the stored keys.
+    return re.sub(r"[\s_]+", "-", value.strip().casefold())
 
 
 def validate_mod_entry(mod: Dict[str, Any], index: int) -> Tuple[List[str], List[str]]:
