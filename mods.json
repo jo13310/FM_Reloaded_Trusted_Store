@@ -51,7 +51,7 @@
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/FM_Reloaded_Trusted_Store/main/manifests/torojoh_camera.json",
       "install_notes": "Uses trusted manifest to place ArthurRayPovMod.dll into BepInEx/plugins/.",
-      "downloads": 75,
+      "downloads": 76,
       "date_added": "2025-11-02",
       "last_updated": "2025-11-02",
       "dependencies": [],
