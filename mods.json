@@ -107,7 +107,7 @@
       },
       "manifest_url": "https://raw.githubusercontent.com/jo13310/FM_Reloaded_Trusted_Store/main/manifests/brul_faster_match_startup.json",
       "install_notes": "Places brululul.fastermatchstartup.dll into BepInEx/plugins/ via manifest mapping.",
-      "downloads": 321,
+      "downloads": 322,
       "date_added": "2025-11-03",
       "last_updated": "2025-11-03",
       "dependencies": [],
